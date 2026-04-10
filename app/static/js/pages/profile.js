@@ -424,8 +424,10 @@ if (window.__profileJsLoaded) {
     const registerBarbershopForm = document.getElementById("registerBarbershopForm");
     const shopNameInput = document.getElementById("shopName");
     const shopPostcodeInput = document.getElementById("shopPostcode");
+    const shopWebsiteInput = document.getElementById("shopWebsite");
     const shopNameError = document.getElementById("shopNameError");
     const shopPostcodeError = document.getElementById("shopPostcodeError");
+    const shopWebsiteError = document.getElementById("shopWebsiteError");
     const shopFormError = document.getElementById("shopFormError");
     const submitShopBtn = document.getElementById("submitShopBtn");
 
@@ -435,9 +437,11 @@ if (window.__profileJsLoaded) {
       // Clear any previous errors and form state
       shopNameError.textContent = "";
       shopPostcodeError.textContent = "";
+      shopWebsiteError.textContent = "";
       shopFormError.textContent = "";
       shopNameInput.value = "";
       shopPostcodeInput.value = "";
+      shopWebsiteInput.value = "";
       shopNameInput.focus();
     }
 
@@ -448,6 +452,7 @@ if (window.__profileJsLoaded) {
       registerBarbershopForm.reset();
       shopNameError.textContent = "";
       shopPostcodeError.textContent = "";
+      shopWebsiteError.textContent = "";
       shopFormError.textContent = "";
     }
 
@@ -480,11 +485,13 @@ if (window.__profileJsLoaded) {
 
         const shopName = shopNameInput.value.trim();
         const shopPostcode = shopPostcodeInput.value.trim();
+        const shopWebsite = shopWebsiteInput.value.trim();
 
         // Validation
         let isValid = true;
         shopNameError.textContent = "";
         shopPostcodeError.textContent = "";
+        shopWebsiteError.textContent = "";
         shopFormError.textContent = "";
 
         if (!shopName) {
@@ -503,6 +510,16 @@ if (window.__profileJsLoaded) {
           isValid = false;
         }
 
+        if (shopWebsite) {
+          if (shopWebsite.length > 255) {
+            shopWebsiteError.textContent = "Website URL too long (max 255 characters)";
+            isValid = false;
+          } else if (!shopWebsite.startsWith(("http://", "https://", "www.")) && !shopWebsite.includes(".")) {
+            shopWebsiteError.textContent = "Please enter a valid website URL";
+            isValid = false;
+          }
+        }
+
         if (!isValid) {
           console.log("✗ Form validation failed");
           return;
@@ -518,6 +535,11 @@ if (window.__profileJsLoaded) {
             postcode: shopPostcode,
             auto_assign: true,  // Auto-assign to current barber
           };
+
+          // Add website to payload if provided
+          if (shopWebsite) {
+            payload.website = shopWebsite;
+          }
 
           console.log("🏪 Creating barbershop with payload:", payload);
 

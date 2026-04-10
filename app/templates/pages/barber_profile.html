@@ -25,19 +25,9 @@
       <div id="user-promo-mount"></div>
     </div>
 
-<<<<<<< HEAD
-    {% if barber.website %}
-      <a href="{{ barber.website }}" target="_blank" rel="noopener noreferrer" class="barber-profile__cta-button">Go to website</a>
-    {% else %}
-      <button class="barber-profile__cta-button" type="button" disabled>Go to website (unavailable)</button>
-    {% endif %}
-=======
-    {% if barber.bio %}
-    <p class="barber-profile__bio">{{ barber.bio }}</p>
-    {% endif %}
-
-    <button class="barber-profile__cta-button" type="button" disabled>Book this barber (coming soon)</button>
->>>>>>> e101cc0a5016ea30412747ceae9b9bde82adfb8c
+  {% if barber.bio %}
+  <p class="barber-profile__bio">{{ barber.bio }}</p>
+  {% endif %}
 
     <section class="barber-profile__info-section">
       <div class="barber-profile__info-grid">

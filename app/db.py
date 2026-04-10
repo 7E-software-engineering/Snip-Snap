@@ -516,6 +516,33 @@ def create_haircut_post(barber_id: int, image_url: str, width_px: int, height_px
                 )
     return photo_id
 
+def create_gallery_photo(barber_id: int, image_url: str, width_px: int, height_px: int, main_tag_id: int = None):
+    """
+    Create a gallery photo (not a post). Used for barber gallery images.
+    
+    Args:
+        barber_id: Barber ID
+        image_url: Storage path to the image
+        width_px: Image width in pixels
+        height_px: Image height in pixels
+        main_tag_id: Optional main tag ID for the photo
+        
+    Returns:
+        photo_id of the created photo
+    """
+    with _get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO HaircutPhoto (barber_id, image_url, width_px, height_px, is_post, main_tag, status)
+                VALUES (%s, %s, %s, %s, FALSE, %s, 'show')
+                RETURNING photo_id
+                """,
+                (barber_id, image_url, width_px, height_px, main_tag_id),
+            )
+            photo_id = cur.fetchone()[0]
+    return photo_id
+
 # fetch_discover_posts is a complex query builder for the discover page, supporting multiple optional filters and sorts, and calculating distance and blended scores for ranking.
 # It returns a list of haircut posts with associated promo info, ratings, and distance if viewer location is provided.
 # It is a very important function for the discover page performance and relevance, and is carefully optimized with conditional joins and where clauses based on the provided filters.
@@ -1016,7 +1043,7 @@ def postcode_to_coordinates(postcode: str) -> tuple | None:
         return None
 
 
-def create_barbershop(name: str, postcode: str, location_lat: float, location_lng: float) -> int:
+def create_barbershop(name: str, postcode: str, location_lat: float, location_lng: float, website: str = None) -> int:
     """
     Create a new barbershop in the database.
     
@@ -1025,6 +1052,7 @@ def create_barbershop(name: str, postcode: str, location_lat: float, location_ln
         postcode: UK postcode
         location_lat: Latitude coordinate
         location_lng: Longitude coordinate
+        website: Optional website URL
         
     Returns:
         barbershop_id of the newly created barbershop
@@ -1033,11 +1061,11 @@ def create_barbershop(name: str, postcode: str, location_lat: float, location_ln
         with conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO Barbershop (name, postcode, location_lat, location_lng)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO Barbershop (name, postcode, location_lat, location_lng, website)
+                VALUES (%s, %s, %s, %s, %s)
                 RETURNING barbershop_id
                 """,
-                (name.strip(), postcode.strip(), location_lat, location_lng),
+                (name.strip(), postcode.strip(), location_lat, location_lng, website.strip() if website else None),
             )
             barbershop_id = cur.fetchone()[0]
         conn.commit()

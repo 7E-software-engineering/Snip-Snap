@@ -1,38 +1,148 @@
 <!doctype html>
 <html lang="en-GB">
-  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Finishing sign-in…</title>
+  </head>
   <body>
     <p>Finishing sign-in…</p>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+      console.log("✅ auth_redirect.html page loaded");
+      
       const SUPABASE_URL = "{{ supabase_url|e }}";
       const SUPABASE_ANON_KEY = "{{ supabase_anon_key|e }}";
+      
+      console.log("📋 Supabase config loaded:", {
+        url_exists: !!SUPABASE_URL,
+        key_exists: !!SUPABASE_ANON_KEY,
+      });
+      
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      console.log("✅ Supabase client created");
+      console.log("📍 Current URL:", window.location.href);
+      console.log("🔗 URL hash:", window.location.hash);
 
-      async function run() {
-        const { data, error } = await supabase.auth.getSession();
-        if (error || !data.session) {
-          document.body.innerText = "Could not establish session. Try logging in again.";
-          return;
+      // Parse access_token from URL hash
+      function extractAccessToken() {
+        const hash = window.location.hash;
+        console.log("🔍 Parsing hash:", hash);
+        
+        if (!hash) {
+          console.warn("⚠️ No hash fragment in URL");
+          return null;
         }
 
+        const params = new URLSearchParams(hash.substring(1));
+        const token = params.get('access_token');
+        
+        if (token) {
+          console.log("✓ Access token found in hash");
+        } else {
+          console.warn("⚠️ No access_token in hash");
+        }
+        
+        return token;
+      }
+
+      async function completeOAuthFlow() {
+        try {
+          console.log("⏳ Step 1: Checking for access token in URL...");
+          
+          // First try to get the access token from the URL hash
+          let accessToken = extractAccessToken();
+          
+          if (accessToken) {
+            console.log("📤 Token found in hash, posting directly to Flask");
+            await postTokenToFlask(accessToken);
+            return;
+          }
+
+          // Fallback: wait a moment for Supabase to process the OAuth callback
+          console.log("⏳ Waiting for Supabase to process OAuth callback...");
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          const { data, error } = await supabase.auth.getSession();
+          console.log("📊 getSession result:", { 
+            has_error: !!error, 
+            has_session: !!data?.session,
+            error: error?.message 
+          });
+
+          if (error) {
+            throw new Error("getSession error: " + error.message);
+          }
+
+          if (!data?.session) {
+            console.warn("⚠️ Still no session, waiting for auth state change...");
+            
+            // Wait for auth state change
+            const session = await new Promise((resolve, reject) => {
+              const timeout = setTimeout(() => {
+                reject(new Error("Auth state change timeout - OAuth callback may have failed"));
+              }, 5000);
+
+              const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+                console.log("🔄 Auth state changed:", { event, has_session: !!session });
+                
+                if (session) {
+                  clearTimeout(timeout);
+                  subscription?.unsubscribe();
+                  resolve(session);
+                }
+              });
+            });
+            
+            console.log("✓ Session obtained via state change");
+            await postTokenToFlask(session.access_token);
+          } else {
+            console.log("✓ Session obtained from getSession");
+            await postTokenToFlask(data.session.access_token);
+          }
+          
+        } catch (error) {
+          console.error("❌ OAuth flow error:", error);
+          document.body.innerText = "❌ Sign-in error: " + (error?.message || error);
+          throw error;
+        }
+      }
+
+      async function postTokenToFlask(access_token) {
+        if (!access_token) {
+          throw new Error("No access token to send");
+        }
+        
+        console.log("📤 Posting token to Flask backend (token length:", access_token.length, ")");
+        
         const res = await fetch("{{ url_for('auth_callback') }}", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ access_token: data.session.access_token }),
+          body: JSON.stringify({ access_token }),
         });
 
         const json = await res.json();
+        console.log("📥 Flask response:", { status: res.status, ok: json.ok, error: json.error });
+
         if (!json.ok) {
-          document.body.innerText = "Server auth failed: " + (json.error || "unknown error");
-          return;
+          throw new Error("Flask auth failed: " + (json.error || "Unknown error"));
         }
 
-        window.location.href = "{{ url_for('discover') }}";
+        console.log("✅ Auth successful! Redirecting to discover...");
+        document.body.innerText = "✅ Sign-in successful! Redirecting…";
+        
+        // Small delay before redirect
+        setTimeout(() => {
+          window.location.href = "{{ url_for('discover') }}";
+        }, 500);
       }
 
-      run();
+      // Start the OAuth flow
+      console.log("🚀 Starting OAuth completion flow...");
+      completeOAuthFlow().catch(error => {
+        console.error("❌ Fatal error in OAuth flow:", error);
+      });
     </script>
   </body>
 </html>

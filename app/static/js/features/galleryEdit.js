@@ -165,7 +165,28 @@ export async function loadEditableGallery() {
 
     if (!photos || photos.length === 0) {
       console.log('[GALLERY EDIT] No photos returned');
-      mountEl.innerHTML = "<p>No gallery photos yet. Edit existing photos to add them to your gallery!</p>";
+      const containerDiv = document.createElement('div');
+      
+      // Show upload button when no photos
+      if (0 < 8) {
+        const uploadSection = document.createElement('div');
+        uploadSection.className = 'gallery-upload-section';
+        const uploadBtn = document.createElement('button');
+        uploadBtn.type = 'button';
+        uploadBtn.className = 'gallery-upload-btn';
+        uploadBtn.textContent = 'Upload Photo (0/8)';
+        uploadBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          openGalleryUploadModal();
+        });
+        uploadSection.appendChild(uploadBtn);
+        containerDiv.appendChild(uploadSection);
+      }
+      
+      const emptyMsg = document.createElement('p');
+      emptyMsg.textContent = 'No gallery photos yet. Upload or edit existing photos to add them to your gallery!';
+      containerDiv.appendChild(emptyMsg);
+      mountEl.appendChild(containerDiv);
       if (loadingEl) loadingEl.classList.remove('show');
       return;
     }
@@ -177,12 +198,38 @@ export async function loadEditableGallery() {
     
     console.log('[GALLERY EDIT] Components imported, rendering gallery');
 
+    // Create container for both upload button (if needed) and gallery
+    const containerDiv = document.createElement('div');
+    containerDiv.className = 'editable-gallery-container';
+    
+    // Show upload button when less than 8 photos
+    if (photos.length < 8) {
+      const uploadSection = document.createElement('div');
+      uploadSection.className = 'gallery-upload-section';
+      const uploadBtn = document.createElement('button');
+      uploadBtn.type = 'button';
+      uploadBtn.className = 'gallery-upload-btn';
+      uploadBtn.textContent = `Upload Photo (${photos.length}/8)`;
+      uploadBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openGalleryUploadModal();
+      });
+      uploadSection.appendChild(uploadBtn);
+      containerDiv.appendChild(uploadSection);
+    }
+    
+    const gridContainer = document.createElement('div');
+    gridContainer.className = 'gallery-grid-container';
+    containerDiv.appendChild(gridContainer);
+
     renderGalleryGrid({
-      mountEl,
+      mountEl: gridContainer,
       items: photos,
       columns: 3,
       renderItem: (photo) => renderEditableGalleryCard(photo, openEditPhotoModal)
     });
+    
+    mountEl.appendChild(containerDiv);
     
     // Hide loading indicator
     if (loadingEl) loadingEl.classList.remove('show');
@@ -382,5 +429,306 @@ function showEditPhotoLoading(show) {
     loading.classList.add('show');
   } else {
     loading.classList.remove('show');
+  }
+}
+
+// Gallery Upload Modal Functions
+let galleryUploadFile = null;
+let galleryUploadTagSelection = null;
+let galleryUploadTagListComponent = null;
+let galleryUploadTagAutocomplete = null;
+
+export function openGalleryUploadModal() {
+  console.log('[GALLERY EDIT] Opening gallery upload modal');
+  
+  // Create modal if it doesn't exist
+  let uploadGalleryModal = document.getElementById('uploadGalleryModal');
+  if (!uploadGalleryModal) {
+    createGalleryUploadModal();
+    uploadGalleryModal = document.getElementById('uploadGalleryModal');
+  }
+  
+  // Reset form
+  resetGalleryUploadForm();
+  
+  // Load tags for gallery upload
+  loadGalleryUploadTags();
+  
+  // Show modal
+  uploadGalleryModal.classList.add('open');
+}
+
+function createGalleryUploadModal() {
+  console.log('[GALLERY EDIT] Creating gallery upload modal');
+  
+  const modalHTML = `
+    <div class="modal" id="uploadGalleryModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Upload Gallery Photo</h2>
+          <button class="close-btn" id="closeGalleryUploadBtn">&times;</button>
+        </div>
+
+        <div class="error-message" id="galleryUploadErrorMessage"></div>
+        <div class="success-message" id="galleryUploadSuccessMessage"></div>
+
+        <form id="uploadGalleryForm">
+          <!-- Photo Input -->
+          <div class="form-group">
+            <label for="galleryPhotoInput">Select Photo</label>
+            <input type="file" id="galleryPhotoInput" name="photo" accept="image/*" required>
+          </div>
+
+          <!-- Preview -->
+          <div id="galleryPhotoPreview"></div>
+
+          <!-- Main Tag Selection (Optional) -->
+          <div class="form-group">
+            <label>Main Tag (Optional)</label>
+            <div id="galleryTagSearchContainer"></div>
+            <div id="gallerySelectedTag" style="margin-top: 12px; min-height: 40px;"></div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="cancelGalleryUploadBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary">Upload</button>
+          </div>
+
+          <div class="loading" id="galleryUploadLoading">
+            <p>Uploading...</p>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  
+  // Set up event listeners
+  const uploadGalleryModal = document.getElementById('uploadGalleryModal');
+  const closeBtn = document.getElementById('closeGalleryUploadBtn');
+  const cancelBtn = document.getElementById('cancelGalleryUploadBtn');
+  const uploadForm = document.getElementById('uploadGalleryForm');
+  const photoInput = document.getElementById('galleryPhotoInput');
+  const preview = document.getElementById('galleryPhotoPreview');
+  
+  closeBtn.addEventListener('click', () => {
+    console.log('[GALLERY EDIT] Gallery upload modal close clicked');
+    uploadGalleryModal.classList.remove('open');
+    resetGalleryUploadForm();
+  });
+  
+  cancelBtn.addEventListener('click', () => {
+    console.log('[GALLERY EDIT] Gallery upload modal cancel clicked');
+    uploadGalleryModal.classList.remove('open');
+    resetGalleryUploadForm();
+  });
+  
+  uploadGalleryModal.addEventListener('click', (e) => {
+    if (e.target === uploadGalleryModal) {
+      console.log('[GALLERY EDIT] Gallery upload modal clicked outside');
+      uploadGalleryModal.classList.remove('open');
+      resetGalleryUploadForm();
+    }
+  });
+  
+  // File input handling
+  photoInput.addEventListener('change', function() {
+    preview.innerHTML = '';
+    const file = this.files[0];
+    
+    console.log('[GALLERY EDIT] File selected:', {
+      name: file?.name,
+      type: file?.type,
+      size: file?.size
+    });
+    
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const box = document.createElement('div');
+        box.className = 'image-box';
+        
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'remove-btn';
+        removeBtn.innerHTML = '×';
+        removeBtn.onclick = (evt) => {
+          evt.preventDefault();
+          photoInput.value = '';
+          preview.innerHTML = '';
+          galleryUploadFile = null;
+        };
+        
+        box.appendChild(img);
+        box.appendChild(removeBtn);
+        preview.appendChild(box);
+      };
+      reader.readAsDataURL(file);
+      galleryUploadFile = file;
+    }
+  });
+  
+  // Form submission
+  uploadForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    console.log('[GALLERY EDIT] Gallery upload form submitted');
+    
+    if (!galleryUploadFile) {
+      showGalleryUploadError('Please select a photo');
+      return;
+    }
+    
+    try {
+      showGalleryUploadLoading(true);
+      hideGalleryUploadMessages();
+      
+      // Get image dimensions
+      const img = new Image();
+      img.onload = async () => {
+        const formData = new FormData();
+        formData.append('photo', galleryUploadFile);
+        formData.append('width', img.width);
+        formData.append('height', img.height);
+        
+        // Add main tag if selected
+        if (galleryUploadTagSelection) {
+          formData.append('main_tag_id', galleryUploadTagSelection.id);
+          console.log('[GALLERY EDIT] Adding main tag:', galleryUploadTagSelection.id);
+        }
+        
+        const uploadResponse = await fetch('/api/photos/upload-gallery', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const uploadData = await uploadResponse.json();
+        
+        if (!uploadResponse.ok) {
+          showGalleryUploadError(uploadData.error || 'Failed to upload photo');
+          showGalleryUploadLoading(false);
+          return;
+        }
+        
+        console.log('[GALLERY EDIT] Gallery photo uploaded successfully:', uploadData);
+        showGalleryUploadSuccess('Photo uploaded successfully!');
+        showGalleryUploadLoading(false);
+        
+        setTimeout(() => {
+          uploadGalleryModal.classList.remove('open');
+          resetGalleryUploadForm();
+          loadEditableGallery();
+        }, 1500);
+      };
+      
+      img.src = URL.createObjectURL(galleryUploadFile);
+    } catch (error) {
+      console.error('[GALLERY EDIT] Error uploading gallery photo:', error);
+      showGalleryUploadError('Error uploading photo: ' + error.message);
+      showGalleryUploadLoading(false);
+    }
+  });
+}
+
+function resetGalleryUploadForm() {
+  galleryUploadFile = null;
+  galleryUploadTagSelection = null;
+  
+  const photoInput = document.getElementById('galleryPhotoInput');
+  const preview = document.getElementById('galleryPhotoPreview');
+  const selectedTag = document.getElementById('gallerySelectedTag');
+  
+  if (photoInput) photoInput.value = '';
+  if (preview) preview.innerHTML = '';
+  if (selectedTag) selectedTag.innerHTML = '';
+  
+  // Reset tag list component
+  if (galleryUploadTagListComponent) {
+    galleryUploadTagListComponent.set_items([]);
+  }
+  
+  hideGalleryUploadMessages();
+}
+
+async function loadGalleryUploadTags() {
+  try {
+    const response = await fetch('/api/discover/search_items');
+    const data = await response.json();
+    const tags = data.items.filter(item => item.type === 'tag');
+    
+    console.log('[GALLERY EDIT] Loaded', tags.length, 'tags for gallery upload');
+
+    const tagSearchContainer = document.getElementById('galleryTagSearchContainer');
+    const selectedTagContainer = document.getElementById('gallerySelectedTag');
+    
+    if (!tagSearchContainer || !selectedTagContainer) {
+      console.error('[GALLERY EDIT] Tag containers not found');
+      return;
+    }
+    
+    tagSearchContainer.innerHTML = '';
+    selectedTagContainer.innerHTML = '';
+
+    // Initialize TagList
+    if (!galleryUploadTagListComponent) {
+      galleryUploadTagListComponent = new window.TagList({
+        mountEl: selectedTagContainer,
+        initialItems: []
+      });
+    } else {
+      galleryUploadTagListComponent.set_items([]);
+    }
+    
+    // Create autocomplete
+    galleryUploadTagAutocomplete = window.createSearchBarAutocomplete(
+      tagSearchContainer,
+      (selectedItem) => {
+        console.log('[GALLERY EDIT] Gallery upload tag selected:', selectedItem);
+        galleryUploadTagSelection = selectedItem;
+        galleryUploadTagListComponent.set_items([selectedItem]);
+      },
+      tags,
+      { placeholder: 'Search and select main tag...' }
+    );
+  } catch (error) {
+    console.error('[GALLERY EDIT] Error loading tags for gallery upload:', error);
+  }
+}
+
+function showGalleryUploadError(message) {
+  const errorEl = document.getElementById('galleryUploadErrorMessage');
+  if (errorEl) {
+    errorEl.textContent = message;
+    errorEl.classList.add('show');
+  }
+}
+
+function showGalleryUploadSuccess(message) {
+  const successEl = document.getElementById('galleryUploadSuccessMessage');
+  if (successEl) {
+    successEl.textContent = message;
+    successEl.classList.add('show');
+  }
+}
+
+function hideGalleryUploadMessages() {
+  const errorEl = document.getElementById('galleryUploadErrorMessage');
+  const successEl = document.getElementById('galleryUploadSuccessMessage');
+  if (errorEl) errorEl.classList.remove('show');
+  if (successEl) successEl.classList.remove('show');
+}
+
+function showGalleryUploadLoading(show) {
+  const loading = document.getElementById('galleryUploadLoading');
+  if (loading) {
+    if (show) {
+      loading.classList.add('show');
+    } else {
+      loading.classList.remove('show');
+    }
   }
 }

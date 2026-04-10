@@ -146,7 +146,7 @@ if (googleBtn) {
       await sb.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: window.location.origin + "/auth_redirect",
+          redirectTo: window.location.origin + "/auth/callback",
         },
       });
     } catch (error) {

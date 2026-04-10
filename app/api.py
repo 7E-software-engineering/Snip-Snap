@@ -13,6 +13,7 @@ from .db import (
     update_user_profile,
     update_barber_barbershop,
     create_haircut_post,
+    create_gallery_photo,
     postcode_to_coordinates,
     create_barbershop,
     update_or_create_profile_photo,
@@ -358,6 +359,7 @@ def create_new_barbershop():
     data = request.get_json(silent=True) or {}
     name = data.get("name", "").strip()
     postcode = data.get("postcode", "").strip()
+    website = data.get("website", "").strip() if data.get("website") else None
     auto_assign = data.get("auto_assign", True)  # Whether to assign to current barber
 
     # Validation
@@ -372,6 +374,14 @@ def create_new_barbershop():
 
     if len(postcode) > 10:
         return jsonify({"ok": False, "error": "Postcode too long"}), 400
+
+    # Validate website if provided
+    if website:
+        if len(website) > 255:
+            return jsonify({"ok": False, "error": "Website URL too long (max 255 characters)"}), 400
+        # Simple URL validation
+        if not website.startswith(("http://", "https://", "www.")):
+            website = "https://" + website
 
     # Sanitize name
     err = sanitize_input(name)
@@ -390,7 +400,7 @@ def create_new_barbershop():
         
         # Create barbershop
         print(f"[CREATE_BARBERSHOP] Creating barbershop: {name} @ {postcode}")
-        barbershop_id = create_barbershop(name, postcode, lat, lng)
+        barbershop_id = create_barbershop(name, postcode, lat, lng, website)
         
         # Optionally assign to current barber
         if auto_assign:
@@ -402,6 +412,7 @@ def create_new_barbershop():
             "barbershop_id": barbershop_id,
             "name": name,
             "postcode": postcode,
+            "website": website,
             "location_lat": lat,
             "location_lng": lng
         }), 201
@@ -621,4 +632,87 @@ def upload_photo():
         print(f"[UPLOAD_PHOTO] Error uploading photo: {error_msg}")
         import traceback
         print(f"[UPLOAD_PHOTO] Traceback: {traceback.format_exc()}")
+        return jsonify({"ok": False, "error": error_msg}), 500
+
+
+@api_bp.post("/photos/upload-gallery")
+def upload_gallery_photo():
+    """Upload a gallery photo (not a post). Only barbers can upload."""
+    print("[UPLOAD_GALLERY] Starting upload_gallery_photo request")
+    
+    u = session.get("user")
+    if not u or not u.get("id"):
+        return jsonify({"ok": False, "error": "Not logged in"}), 401
+    
+    user_id = int(u["id"])
+    role = u.get("role", "customer")
+    
+    if role != "barber":
+        return jsonify({"ok": False, "error": "Only barbers can upload photos"}), 403
+    
+    # Get barber_id from user_id
+    from .db import _get_conn
+    try:
+        with _get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT barber_id FROM Barber WHERE user_id = %s", (user_id,))
+                result = cur.fetchone()
+                if not result:
+                    return jsonify({"ok": False, "error": "Barber profile not found"}), 404
+                barber_id = result[0]
+    except Exception as e:
+        print(f"[UPLOAD_GALLERY] Error getting barber: {e}")
+        return jsonify({"ok": False, "error": "Could not find barber profile"}), 500
+    
+    # Get file from request
+    file = request.files.get("photo")
+    if not file or file.filename == "":
+        return jsonify({"ok": False, "error": "No photo provided"}), 400
+    
+    # Validate file type
+    ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "webp"}
+    file_ext = file.filename.rsplit(".", 1)[1].lower() if "." in file.filename else ""
+    
+    if file_ext not in ALLOWED_EXTENSIONS:
+        return jsonify({"ok": False, "error": "File type not allowed. Use jpg, jpeg, png, gif, or webp"}), 400
+    
+    # Get image dimensions
+    width_px = request.form.get("width", type=int)
+    height_px = request.form.get("height", type=int)
+    
+    if not width_px or not height_px:
+        return jsonify({"ok": False, "error": "Image dimensions required"}), 400
+    
+    # Get optional main tag ID
+    main_tag_id = request.form.get("main_tag_id", type=int, default=None)
+    
+    print(f"[UPLOAD_GALLERY] Creating gallery photo: barber_id={barber_id}, dimensions={width_px}x{height_px}, main_tag_id={main_tag_id}")
+    
+    try:
+        # Read file data
+        file_data = file.read()
+        if not file_data:
+            return jsonify({"ok": False, "error": "File is empty"}), 400
+        
+        # Upload to Supabase storage
+        storage_path = upload_photo_to_storage(barber_id, file_data, file.filename)
+        if not storage_path:
+            return jsonify({"ok": False, "error": "Failed to upload photo to storage"}), 500
+        
+        # Create gallery photo database record
+        photo_id = create_gallery_photo(barber_id, storage_path, width_px, height_px, main_tag_id)
+        
+        print(f"[UPLOAD_GALLERY] Gallery photo uploaded successfully: photo_id={photo_id}")
+        
+        return jsonify({
+            "ok": True,
+            "photo_id": photo_id,
+            "storage_path": storage_path,
+        }), 201
+        
+    except Exception as e:
+        error_msg = str(e)
+        print(f"[UPLOAD_GALLERY] Error uploading gallery photo: {error_msg}")
+        import traceback
+        print(f"[UPLOAD_GALLERY] Traceback: {traceback.format_exc()}")
         return jsonify({"ok": False, "error": error_msg}), 500

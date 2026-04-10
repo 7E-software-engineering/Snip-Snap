@@ -318,6 +318,12 @@
   color: var(--profile-text);
 }
 
+.optional-label {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--profile-muted);
+}
+
 .form-input {
   width: 100%;
   padding: 12px 14px;

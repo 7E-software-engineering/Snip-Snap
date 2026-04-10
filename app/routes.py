@@ -275,9 +275,20 @@ def register_routes(app):
             supabase_anon_key=os.environ["SUPABASE_ANON_KEY"],
         )
 
-    @app.post("/auth/callback")
+    @app.route("/auth/callback", methods=["GET", "POST"])
     def auth_callback():
-        print("\n--- AUTH CALLBACK START ---")
+        # Handle GET requests from OAuth providers (e.g., Google OAuth callback)
+        # by rendering the auth_redirect page which will handle session setup
+        if request.method == "GET":
+            print("\n--- AUTH CALLBACK GET (OAuth redirect) ---")
+            return render_template(
+                "pages/auth_redirect.html",
+                supabase_url=os.environ["SUPABASE_URL"],
+                supabase_anon_key=os.environ["SUPABASE_ANON_KEY"],
+            )
+
+        # Handle POST requests with access token
+        print("\n--- AUTH CALLBACK POST START ---")
 
         data = request.get_json(silent=True) or {}
         print("Received JSON:", data)
@@ -343,7 +354,7 @@ def register_routes(app):
         }
 
         print("Session set to:", session["user"])
-        print("--- AUTH CALLBACK END ---\n")
+        print("--- AUTH CALLBACK POST END ---\n")
 
         return jsonify({"ok": True})
     
