@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Barber Dashboard</h1>
+
+<div id="timetableMount"></div>
+
+<style>
+.timetable { width:400px;background:#f4f4f4;padding:15px;border-radius:10px;}
+.row{display:flex;justify-content:space-between;margin:6px 0;}
+.closed{color:red;font-weight:bold;}
+.status{
+    margin-top:15px;
+    padding:10px;
+    text-align:center;
+    font-weight:bold;
+}
+.open{background:#c8f7c5;}
+.closedStatus{background:#f7c5c5;}
+</style>
+
+<script>
+
+async function loadSchedule(){
+    const res = await fetch("/api/barber-schedule/");
+    return await res.json();
+}
+
+function isOpenNow(schedule){
+
+    const now = new Date();
+    const day =
+        now.toLocaleDateString("en-GB",{weekday:"long"})
+        .toLowerCase();
+
+    const time = now.toTimeString().slice(0,5);
+
+    const today = schedule[day];
+
+    if(!today) return false;
+
+    return time >= today.open && time <= today.close;
+}
+
+function TimetableFeature(schedule, mount){
+
+    const days=[
+        "monday","tuesday","wednesday",
+        "thursday","friday","saturday","sunday"
+    ];
+
+    mount.innerHTML="";
+
+    const table=document.createElement("div");
+    table.className="timetable";
+
+    days.forEach(day=>{
+
+        const row=document.createElement("div");
+        row.className="row";
+
+        const label=document.createElement("span");
+        label.textContent=
+            day.charAt(0).toUpperCase()+day.slice(1);
+
+        const controls=document.createElement("div");
+
+        const checkbox=document.createElement("input");
+        checkbox.type="checkbox";
+        checkbox.checked=!!schedule[day];
+
+        const open=document.createElement("input");
+        open.type="time";
+
+        const close=document.createElement("input");
+        close.type="time";
+
+        if(schedule[day]){
+            open.value=schedule[day].open;
+            close.value=schedule[day].close;
+        }
+
+        function update(){
+            if(!checkbox.checked){
+                schedule[day]=null;
+                label.classList.add("closed");
+            }else{
+                schedule[day]={
+                    open:open.value||"09:00",
+                    close:close.value||"17:00"
+                };
+                label.classList.remove("closed");
+            }
+            renderStatus();
+        }
+
+        checkbox.onchange=update;
+        open.onchange=update;
+        close.onchange=update;
+
+        if(!schedule[day]) label.classList.add("closed");
+
+        controls.append(checkbox,open,close);
+        row.append(label,controls);
+        table.appendChild(row);
+    });
+
+    const status=document.createElement("div");
+    status.className="status";
+
+    function renderStatus(){
+        if(isOpenNow(schedule)){
+            status.textContent="Currently Open";
+            status.className="status open";
+        }else{
+            status.textContent="Currently Closed";
+            status.className="status closedStatus";
+        }
+    }
+
+    renderStatus();
+
+    const saveBtn=document.createElement("button");
+    saveBtn.textContent="Save Schedule";
+
+    saveBtn.onclick=async()=>{
+        await fetch("/api/save-schedule/",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json",
+                "X-CSRFToken":"{{ csrf_token }}"
+            },
+            body:JSON.stringify(schedule)
+        });
+        alert("Saved");
+    };
+
+    mount.append(table,status,saveBtn);
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    const schedule = await loadSchedule();
+
+    TimetableFeature(
+        schedule,
+        document.getElementById("timetableMount")
+    );
+
+});
+</script>
+
+{% endblock %}
