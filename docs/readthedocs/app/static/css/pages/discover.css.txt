@@ -1,0 +1,19 @@
+app/static/css/pages/discover.css
+=================================
+
+Overview
+--------
+Provides page-specific frontend styling rules.
+
+Location
+--------
+Repository path: ``app/static/css/pages/discover.css``
+
+Type
+----
+File extension: ``css``
+
+Responsibilities
+----------------
+- Keep this file focused on its current role in the Snip-Snap codebase.
+- Update this reference document when the file purpose changes.

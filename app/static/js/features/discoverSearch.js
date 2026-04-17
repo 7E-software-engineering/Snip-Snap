@@ -1,3 +1,5 @@
+// File overview: Implements feature-level frontend workflows and interactions.
+
 async function fetchSearchItems(endpoint) {
   const res = await fetch(endpoint, { method: "GET" });
   if (!res.ok) {

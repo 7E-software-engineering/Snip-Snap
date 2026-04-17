@@ -1,0 +1,19 @@
+app/templates/base.html
+=======================
+
+Overview
+--------
+Defines shared server-rendered HTML template structure.
+
+Location
+--------
+Repository path: ``app/templates/base.html``
+
+Type
+----
+File extension: ``html``
+
+Responsibilities
+----------------
+- Keep this file focused on its current role in the Snip-Snap codebase.
+- Update this reference document when the file purpose changes.

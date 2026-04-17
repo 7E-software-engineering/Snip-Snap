@@ -1,3 +1,5 @@
+/* File overview: Provides reusable frontend component styling rules. */
+
 .galleryGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(248px, 1fr));

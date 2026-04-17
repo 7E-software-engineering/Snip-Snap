@@ -1,0 +1,19 @@
+app/auth.py
+===========
+
+Overview
+--------
+Implements backend Flask routing, auth, data access, and integrations.
+
+Location
+--------
+Repository path: ``app/auth.py``
+
+Type
+----
+File extension: ``py``
+
+Responsibilities
+----------------
+- Keep this file focused on its current role in the Snip-Snap codebase.
+- Update this reference document when the file purpose changes.

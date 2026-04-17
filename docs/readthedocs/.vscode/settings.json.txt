@@ -1,0 +1,19 @@
+.vscode/settings.json
+=====================
+
+Overview
+--------
+Supports the Snip-Snap application configuration or assets.
+
+Location
+--------
+Repository path: ``.vscode/settings.json``
+
+Type
+----
+File extension: ``json``
+
+Responsibilities
+----------------
+- Keep this file focused on its current role in the Snip-Snap codebase.
+- Update this reference document when the file purpose changes.

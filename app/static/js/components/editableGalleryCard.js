@@ -1,3 +1,5 @@
+// File overview: Implements reusable frontend component behavior.
+
 /**
  * Renders an editable gallery card for dashboard
  */

@@ -1,0 +1,19 @@
+.gitignore
+==========
+
+Overview
+--------
+Defines repository-level Git ignore patterns.
+
+Location
+--------
+Repository path: ``.gitignore``
+
+Type
+----
+File extension: ``none``
+
+Responsibilities
+----------------
+- Keep this file focused on its current role in the Snip-Snap codebase.
+- Update this reference document when the file purpose changes.

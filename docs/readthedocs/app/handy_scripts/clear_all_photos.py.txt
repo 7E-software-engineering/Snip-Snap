@@ -1,0 +1,19 @@
+app/handy_scripts/clear_all_photos.py
+=====================================
+
+Overview
+--------
+Provides operational utility scripts for data and media maintenance.
+
+Location
+--------
+Repository path: ``app/handy_scripts/clear_all_photos.py``
+
+Type
+----
+File extension: ``py``
+
+Responsibilities
+----------------
+- Keep this file focused on its current role in the Snip-Snap codebase.
+- Update this reference document when the file purpose changes.

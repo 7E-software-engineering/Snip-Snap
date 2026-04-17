@@ -1,3 +1,5 @@
+// File overview: Implements reusable frontend component behavior.
+
 export function renderGalleryGrid({ mountEl, items, columns, renderItem }) {
   mountEl.innerHTML = "";
 

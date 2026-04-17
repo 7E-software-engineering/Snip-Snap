@@ -1,3 +1,5 @@
+// File overview: Implements reusable frontend component behavior.
+
 import { renderGalleryGrid } from "./galleryGrid.js";
 import { renderBarberGalleryCard } from "./barberGalleryCard.js";
 

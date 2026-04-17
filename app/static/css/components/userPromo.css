@@ -1,3 +1,5 @@
+/* File overview: Provides reusable frontend component styling rules. */
+
 .user-promo {
   --user-promo-avatar-size: 36px;
   display: inline-flex;

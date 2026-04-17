@@ -1,0 +1,19 @@
+app/static/js/pages/login.js
+============================
+
+Overview
+--------
+Implements page-specific frontend behavior and event handling.
+
+Location
+--------
+Repository path: ``app/static/js/pages/login.js``
+
+Type
+----
+File extension: ``js``
+
+Responsibilities
+----------------
+- Keep this file focused on its current role in the Snip-Snap codebase.
+- Update this reference document when the file purpose changes.

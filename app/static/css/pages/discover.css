@@ -1,3 +1,5 @@
+/* File overview: Provides page-specific frontend styling rules. */
+
 :root {
   --discover-bg: var(--login-bg, #f5f7fb);
   --discover-surface: var(--login-surface, #ffffff);

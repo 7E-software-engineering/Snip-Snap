@@ -1,3 +1,5 @@
+/* File overview: Provides page-specific frontend styling rules. */
+
 :root {
   --login-bg: #f5f7fb;
   --login-surface: #ffffff;

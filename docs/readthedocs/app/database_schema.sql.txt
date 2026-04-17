@@ -1,0 +1,19 @@
+app/database_schema.sql
+=======================
+
+Overview
+--------
+Declares database schema and SQL objects used by the app.
+
+Location
+--------
+Repository path: ``app/database_schema.sql``
+
+Type
+----
+File extension: ``sql``
+
+Responsibilities
+----------------
+- Keep this file focused on its current role in the Snip-Snap codebase.
+- Update this reference document when the file purpose changes.

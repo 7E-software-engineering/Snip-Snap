@@ -1,0 +1,19 @@
+app/static/js/features/postGallery.js
+=====================================
+
+Overview
+--------
+Implements feature-level frontend workflows and interactions.
+
+Location
+--------
+Repository path: ``app/static/js/features/postGallery.js``
+
+Type
+----
+File extension: ``js``
+
+Responsibilities
+----------------
+- Keep this file focused on its current role in the Snip-Snap codebase.
+- Update this reference document when the file purpose changes.

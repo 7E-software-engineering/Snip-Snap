@@ -1,0 +1,19 @@
+app/static/js/components/photoupload.js
+=======================================
+
+Overview
+--------
+Implements reusable frontend component behavior.
+
+Location
+--------
+Repository path: ``app/static/js/components/photoupload.js``
+
+Type
+----
+File extension: ``js``
+
+Responsibilities
+----------------
+- Keep this file focused on its current role in the Snip-Snap codebase.
+- Update this reference document when the file purpose changes.

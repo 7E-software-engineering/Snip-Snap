@@ -1,3 +1,5 @@
+# File overview: Defines repository-level Git ignore patterns.
+
 .venv/
 __pycache__/
 *.pyc

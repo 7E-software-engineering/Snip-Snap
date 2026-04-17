@@ -1,3 +1,5 @@
+// File overview: Implements reusable frontend component behavior.
+
 export class ReviewWidget {
     constructor(containerId) {
         this.container = document.getElementById(containerId);

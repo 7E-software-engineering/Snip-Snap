@@ -1,3 +1,5 @@
+// File overview: Implements page-specific frontend behavior and event handling.
+
 import { TagList } from "../components/tagList.js";
 import { initPostGallery } from "../features/postGallery.js";
 import { initDiscoverSearch } from "../features/discoverSearch.js";

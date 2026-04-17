@@ -1,0 +1,19 @@
+requirements.txt
+================
+
+Overview
+--------
+Pins Python dependencies required by the Flask application and scripts.
+
+Location
+--------
+Repository path: ``requirements.txt``
+
+Type
+----
+File extension: ``txt``
+
+Responsibilities
+----------------
+- Keep this file focused on its current role in the Snip-Snap codebase.
+- Update this reference document when the file purpose changes.

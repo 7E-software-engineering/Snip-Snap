@@ -1,0 +1,19 @@
+app/templates/pages/signup.html
+===============================
+
+Overview
+--------
+Defines a server-rendered page template used by Flask routes.
+
+Location
+--------
+Repository path: ``app/templates/pages/signup.html``
+
+Type
+----
+File extension: ``html``
+
+Responsibilities
+----------------
+- Keep this file focused on its current role in the Snip-Snap codebase.
+- Update this reference document when the file purpose changes.

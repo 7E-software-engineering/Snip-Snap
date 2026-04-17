@@ -1,3 +1,5 @@
+// File overview: Implements feature-level frontend workflows and interactions.
+
 import { renderGalleryGrid } from "../components/galleryGrid.js";
 import { renderPostImageCard } from "../components/postImageCard.js";
 
