@@ -3,7 +3,7 @@ app/app.py
 
 Overview
 --------
-Implements backend Flask routing, auth, data access, and integrations.
+Initializes and configures the Flask application instance.
 
 Location
 --------

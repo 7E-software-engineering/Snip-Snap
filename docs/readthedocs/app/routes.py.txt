@@ -3,7 +3,7 @@ app/routes.py
 
 Overview
 --------
-Implements backend Flask routing, auth, data access, and integrations.
+Registers Flask page routes and non-blueprint API endpoints.
 
 Location
 --------

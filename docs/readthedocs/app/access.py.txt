@@ -3,7 +3,7 @@ app/access.py
 
 Overview
 --------
-Implements backend Flask routing, auth, data access, and integrations.
+Provides login and role-based route access decorators.
 
 Location
 --------

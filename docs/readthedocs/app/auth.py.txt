@@ -3,7 +3,7 @@ app/auth.py
 
 Overview
 --------
-Implements backend Flask routing, auth, data access, and integrations.
+Verifies Supabase JWT tokens against the configured JWK set.
 
 Location
 --------

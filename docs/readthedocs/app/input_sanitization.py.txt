@@ -3,7 +3,7 @@ app/input_sanitization.py
 
 Overview
 --------
-Implements backend Flask routing, auth, data access, and integrations.
+Provides helpers to validate and sanitize user-provided text input.
 
 Location
 --------

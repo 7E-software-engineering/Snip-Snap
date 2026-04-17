@@ -3,7 +3,7 @@ app/__init__.py
 
 Overview
 --------
-Implements backend Flask routing, auth, data access, and integrations.
+Initializes the app package namespace.
 
 Location
 --------

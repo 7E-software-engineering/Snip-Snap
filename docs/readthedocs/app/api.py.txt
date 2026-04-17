@@ -3,7 +3,7 @@ app/api.py
 
 Overview
 --------
-Implements backend Flask routing, auth, data access, and integrations.
+Defines `/api` blueprint endpoints for frontend data and updates.
 
 Location
 --------

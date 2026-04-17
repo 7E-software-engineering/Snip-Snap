@@ -3,7 +3,7 @@ app/db.py
 
 Overview
 --------
-Implements backend Flask routing, auth, data access, and integrations.
+Implements PostgreSQL connection helpers and application data queries.
 
 Location
 --------
